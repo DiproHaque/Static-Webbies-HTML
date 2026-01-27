@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithm Visualizer - Synthwave Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff006e;
+            --neon-cyan: #00f5ff;
+            --neon-purple: #b537f2;
+            --neon-yellow: #ffbe0b;
+            --dark-bg: #0a0e27;
+            --darker-bg: #050816;
+            --grid-color: rgba(0, 245, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(180deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+            color: var(--neon-cyan);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridScroll 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gridScroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(255, 0, 110, 0.5);
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px var(--neon-pink)); }
+            to { filter: drop-shadow(0 0 40px var(--neon-cyan)); }
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: var(--neon-yellow);
+            letter-spacing: 2px;
+            font-weight: 300;
+            text-transform: uppercase;
+        }
+
+        .controls-panel {
+            background: rgba(10, 14, 39, 0.6);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 0 30px rgba(0, 245, 255, 0.3),
+                inset 0 0 30px rgba(0, 245, 255, 0.05);
+            animation: fadeIn 1s ease-out 0.3s backwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .control-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--neon-pink);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        select, input[type="range"] {
+            background: var(--darker-bg);
+            border: 2px solid var(--neon-purple);
+            color: var(--neon-cyan);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        select:hover, select:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+        }
+
+        input[type="range"] {
+            width: 200px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan));
+            border-radius: 10px;
+            padding: 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--neon-pink);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--neon-pink);
+            transition: all 0.3s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 25px var(--neon-pink);
+        }
+
+        button {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 35px rgba(255, 0, 110, 0.7);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .stats-panel {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out 0.5s backwards;
+        }
+
+        .stat-box {
+            background: rgba(181, 55, 242, 0.1);
+            border: 2px solid var(--neon-purple);
+            border-radius: 15px;
+            padding: 20px 30px;
+            min-width: 180px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(181, 55, 242, 0.2);
+        }
+
+        .stat-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--neon-yellow);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .visualization-area {
+            background: rgba(5, 8, 22, 0.8);
+            border: 2px solid var(--neon-pink);
+            border-radius: 20px;
+            padding: 40px;
+            min-height: 500px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px;
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 0 40px rgba(255, 0, 110, 0.3),
+                inset 0 0 50px rgba(255, 0, 110, 0.05);
+            animation: fadeIn 1s ease-out 0.7s backwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .visualization-area::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                var(--neon-cyan), 
+                var(--neon-pink), 
+                var(--neon-cyan), 
+                transparent);
+            animation: scanline 3s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .bar {
+            width: 25px;
+            background: linear-gradient(180deg, var(--neon-cyan), var(--neon-purple));
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.5);
+        }
+
+        .bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: white;
+            border-radius: 4px 4px 0 0;
+            opacity: 0.8;
+        }
+
+        .bar.comparing {
+            background: linear-gradient(180deg, var(--neon-yellow), var(--neon-pink));
+            box-shadow: 0 0 25px rgba(255, 190, 11, 0.8);
+            transform: scale(1.05);
+        }
+
+        .bar.swapping {
+            background: linear-gradient(180deg, var(--neon-pink), #ff006e);
+            box-shadow: 0 0 30px rgba(255, 0, 110, 1);
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .bar.sorted {
+            background: linear-gradient(180deg, #00ff88, #00cc6a);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+        }
+
+        .complexity-info {
+            text-align: center;
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(181, 55, 242, 0.05);
+            border: 2px solid var(--neon-purple);
+            border-radius: 15px;
+            animation: fadeIn 1s ease-out 0.9s backwards;
+        }
+
+        .complexity-info h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-pink);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        .complexity-row {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            font-size: 1.1rem;
+        }
+
+        .complexity-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .complexity-label {
+            color: var(--neon-yellow);
+            font-weight: 600;
+        }
+
+        .complexity-value {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan);
+            font-weight: 700;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: var(--neon-purple);
+            font-size: 0.9rem;
+            animation: fadeIn 1s ease-out 1.1s backwards;
+        }
+
+        footer a {
+            color: var(--neon-pink);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        footer a:hover {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .control-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .bar {
+                width: 15px;
+            }
+
+            .visualization-area {
+                padding: 20px;
+                min-height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ALGORITHM VISUALIZER</h1>
+            <div class="subtitle">Synthwave Edition</div>
+        </header>
+
+        <div class="controls-panel">
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="algorithm">Algorithm</label>
+                    <select id="algorithm">
+                        <option value="bubble">Bubble Sort</option>
+                        <option value="selection">Selection Sort</option>
+                        <option value="insertion">Insertion Sort</option>
+                        <option value="quick">Quick Sort</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="arraySize">Array Size: <span id="sizeValue">30</span></label>
+                    <input type="range" id="arraySize" min="10" max="100" value="30">
+                </div>
+
+                <div class="control-group">
+                    <label for="speed">Speed: <span id="speedValue">50</span> ms</label>
+                    <input type="range" id="speed" min="10" max="200" value="50">
+                </div>
+            </div>
+
+            <div class="control-row">
+                <button id="startBtn"><span>START SORT</span></button>
+                <button id="pauseBtn" disabled><span>PAUSE</span></button>
+                <button id="resetBtn"><span>RESET</span></button>
+                <button id="randomizeBtn"><span>RANDOMIZE</span></button>
+            </div>
+        </div>
+
+        <div class="stats-panel">
+            <div class="stat-box">
+                <div class="stat-label">Comparisons</div>
+                <div class="stat-value" id="comparisons">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Array Accesses</div>
+                <div class="stat-value" id="arrayAccesses">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Time Elapsed</div>
+                <div class="stat-value" id="timeElapsed">0s</div>
+            </div>
+        </div>
+
+        <div class="visualization-area" id="visualizationArea"></div>
+
+        <div class="complexity-info">
+            <h3>Time Complexity</h3>
+            <div class="complexity-row">
+                <div class="complexity-item">
+                    <span class="complexity-label">Best:</span>
+                    <span class="complexity-value" id="bestCase">O(n²)</span>
+                </div>
+                <div class="complexity-item">
+                    <span class="complexity-label">Average:</span>
+                    <span class="complexity-value" id="avgCase">O(n²)</span>
+                </div>
+                <div class="complexity-item">
+                    <span class="complexity-label">Worst:</span>
+                    <span class="complexity-value" id="worstCase">O(n²)</span>
+                </div>
+                <div class="complexity-item">
+                    <span class="complexity-label">Space:</span>
+                    <span class="complexity-value" id="spaceCase">O(1)</span>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            Created with 💜 by <strong>Nightwing</strong> | Algorithm Visualizer for SoloLearn
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        let array = [];
+        let arraySize = 30;
+        let speed = 50;
+        let isPaused = false;
+        let isSorting = false;
+        let comparisons = 0;
+        let arrayAccesses = 0;
+        let startTime = 0;
+        let timerInterval = null;
+
+        // DOM elements
+        const visualizationArea = document.getElementById('visualizationArea');
+        const algorithmSelect = document.getElementById('algorithm');
+        const arraySizeInput = document.getElementById('arraySize');
+        const speedInput = document.getElementById('speed');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const randomizeBtn = document.getElementById('randomizeBtn');
+        const sizeValue = document.getElementById('sizeValue');
+        const speedValue = document.getElementById('speedValue');
+        const comparisonsEl = document.getElementById('comparisons');
+        const arrayAccessesEl = document.getElementById('arrayAccesses');
+        const timeElapsedEl = document.getElementById('timeElapsed');
+
+        // Complexity data
+        const complexityData = {
+            bubble: { best: 'O(n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
+            selection: { best: 'O(n²)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
+            insertion: { best: 'O(n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
+            quick: { best: 'O(n log n)', avg: 'O(n log n)', worst: 'O(n²)', space: 'O(log n)' }
+        };
+
+        // Initialize
+        function init() {
+            generateArray();
+            renderArray();
+            updateComplexity();
+        }
+
+        // Generate random array
+        function generateArray() {
+            array = [];
+            for (let i = 0; i < arraySize; i++) {
+                array.push(Math.floor(Math.random() * 400) + 20);
+            }
+        }
+
+        // Render array as bars
+        function renderArray(comparingIndices = [], swappingIndices = [], sortedIndices = []) {
+            visualizationArea.innerHTML = '';
+            const maxValue = Math.max(...array);
+            
+            array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${(value / maxValue) * 400}px`;
+                
+                if (comparingIndices.includes(index)) {
+                    bar.classList.add('comparing');
+                }
+                if (swappingIndices.includes(index)) {
+                    bar.classList.add('swapping');
+                }
+                if (sortedIndices.includes(index)) {
+                    bar.classList.add('sorted');
+                }
+                
+                visualizationArea.appendChild(bar);
+            });
+        }
+
+        // Sleep function
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Update stats
+        function updateStats() {
+            comparisonsEl.textContent = comparisons;
+            arrayAccessesEl.textContent = arrayAccesses;
+        }
+
+        // Update timer
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                if (!isPaused) {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    timeElapsedEl.textContent = `${elapsed}s`;
+                }
+            }, 100);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // Update complexity info
+        function updateComplexity() {
+            const algo = algorithmSelect.value;
+            const data = complexityData[algo];
+            document.getElementById('bestCase').textContent = data.best;
+            document.getElementById('avgCase').textContent = data.avg;
+            document.getElementById('worstCase').textContent = data.worst;
+            document.getElementById('spaceCase').textContent = data.space;
+        }
+
+        // Bubble Sort
+        async function bubbleSort() {
+            const n = array.length;
+            const sortedIndices = [];
+
+            for (let i = 0; i < n - 1; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    if (!isSorting) return;
+                    while (isPaused) await sleep(100);
+
+                    comparisons++;
+                    arrayAccesses += 2;
+                    updateStats();
+
+                    renderArray([j, j + 1], [], sortedIndices);
+
+                    if (array[j] > array[j + 1]) {
+                        [array[j], array[j + 1]] = [array[j + 1], array[j]];
+                        arrayAccesses += 4;
+                        updateStats();
+                        renderArray([], [j, j + 1], sortedIndices);
+                        await sleep(speed);
+                    }
+
+                    await sleep(speed);
+                }
+                sortedIndices.push(n - 1 - i);
+            }
+            sortedIndices.push(0);
+            renderArray([], [], sortedIndices);
+        }
+
+        // Selection Sort
+        async function selectionSort() {
+            const n = array.length;
+            const sortedIndices = [];
+
+            for (let i = 0; i < n - 1; i++) {
+                if (!isSorting) return;
+
+                let minIdx = i;
+                for (let j = i + 1; j < n; j++) {
+                    if (!isSorting) return;
+                    while (isPaused) await sleep(100);
+
+                    comparisons++;
+                    arrayAccesses += 2;
+                    updateStats();
+
+                    renderArray([minIdx, j], [], sortedIndices);
+
+                    if (array[j] < array[minIdx]) {
+                        minIdx = j;
+                    }
+
+                    await sleep(speed);
+                }
+
+                if (minIdx !== i) {
+                    [array[i], array[minIdx]] = [array[minIdx], array[i]];
+                    arrayAccesses += 4;
+                    updateStats();
+                    renderArray([], [i, minIdx], sortedIndices);
+                    await sleep(speed);
+                }
+
+                sortedIndices.push(i);
+                renderArray([], [], sortedIndices);
+            }
+            sortedIndices.push(n - 1);
+            renderArray([], [], sortedIndices);
+        }
+
+        // Insertion Sort
+        async function insertionSort() {
+            const n = array.length;
+            const sortedIndices = [0];
+
+            for (let i = 1; i < n; i++) {
+                if (!isSorting) return;
+
+                let key = array[i];
+                let j = i - 1;
+                arrayAccesses++;
+                updateStats();
+
+                while (j >= 0) {
+                    if (!isSorting) return;
+                    while (isPaused) await sleep(100);
+
+                    comparisons++;
+                    arrayAccesses++;
+                    updateStats();
+
+                    renderArray([j, j + 1], [], sortedIndices);
+
+                    if (array[j] > key) {
+                        array[j + 1] = array[j];
+                        arrayAccesses += 2;
+                        updateStats();
+                        renderArray([], [j, j + 1], sortedIndices);
+                        await sleep(speed);
+                        j--;
+                    } else {
+                        break;
+                    }
+                }
+
+                array[j + 1] = key;
+                arrayAccesses++;
+                updateStats();
+                sortedIndices.push(i);
+                renderArray([], [], sortedIndices);
+                await sleep(speed);
+            }
+        }
+
+        // Quick Sort
+        async function quickSort(low = 0, high = array.length - 1, sortedIndices = []) {
+            if (low < high) {
+                if (!isSorting) return;
+
+                const pi = await partition(low, high, sortedIndices);
+                await quickSort(low, pi - 1, sortedIndices);
+                await quickSort(pi + 1, high, sortedIndices);
+            }
+            
+            if (low === 0 && high === array.length - 1) {
+                for (let i = 0; i < array.length; i++) {
+                    sortedIndices.push(i);
+                }
+                renderArray([], [], sortedIndices);
+            }
+        }
+
+        async function partition(low, high, sortedIndices) {
+            const pivot = array[high];
+            arrayAccesses++;
+            updateStats();
+
+            let i = low - 1;
+
+            for (let j = low; j < high; j++) {
+                if (!isSorting) return;
+                while (isPaused) await sleep(100);
+
+                comparisons++;
+                arrayAccesses++;
+                updateStats();
+
+                renderArray([j, high], [], sortedIndices);
+
+                if (array[j] < pivot) {
+                    i++;
+                    [array[i], array[j]] = [array[j], array[i]];
+                    arrayAccesses += 4;
+                    updateStats();
+                    renderArray([], [i, j], sortedIndices);
+                    await sleep(speed);
+                }
+
+                await sleep(speed);
+            }
+
+            [array[i + 1], array[high]] = [array[high], array[i + 1]];
+            arrayAccesses += 4;
+            updateStats();
+            renderArray([], [i + 1, high], sortedIndices);
+            await sleep(speed);
+
+            sortedIndices.push(i + 1);
+            return i + 1;
+        }
+
+        // Start sorting
+        async function startSorting() {
+            if (isSorting) return;
+
+            isSorting = true;
+            isPaused = false;
+            comparisons = 0;
+            arrayAccesses = 0;
+            updateStats();
+            startTimer();
+
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            resetBtn.disabled = true;
+            randomizeBtn.disabled = true;
+            algorithmSelect.disabled = true;
+            arraySizeInput.disabled = true;
+
+            const algo = algorithmSelect.value;
+
+            switch (algo) {
+                case 'bubble':
+                    await bubbleSort();
+                    break;
+                case 'selection':
+                    await selectionSort();
+                    break;
+                case 'insertion':
+                    await insertionSort();
+                    break;
+                case 'quick':
+                    await quickSort();
+                    break;
+            }
+
+            stopTimer();
+            isSorting = false;
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resetBtn.disabled = false;
+            randomizeBtn.disabled = false;
+            algorithmSelect.disabled = false;
+            arraySizeInput.disabled = false;
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startSorting);
+
+        pauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            pauseBtn.innerHTML = isPaused ? '<span>RESUME</span>' : '<span>PAUSE</span>';
+        });
+
+        resetBtn.addEventListener('click', () => {
+            isSorting = false;
+            isPaused = false;
+            comparisons = 0;
+            arrayAccesses = 0;
+            stopTimer();
+            timeElapsedEl.textContent = '0s';
+            updateStats();
+            generateArray();
+            renderArray();
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            pauseBtn.innerHTML = '<span>PAUSE</span>';
+            resetBtn.disabled = false;
+            randomizeBtn.disabled = false;
+            algorithmSelect.disabled = false;
+            arraySizeInput.disabled = false;
+        });
+
+        randomizeBtn.addEventListener('click', () => {
+            if (!isSorting) {
+                generateArray();
+                renderArray();
+            }
+        });
+
+        arraySizeInput.addEventListener('input', (e) => {
+            arraySize = parseInt(e.target.value);
+            sizeValue.textContent = arraySize;
+            if (!isSorting) {
+                generateArray();
+                renderArray();
+            }
+        });
+
+        speedInput.addEventListener('input', (e) => {
+            speed = parseInt(e.target.value);
+            speedValue.textContent = `${speed}`;
+        });
+
+        algorithmSelect.addEventListener('change', updateComplexity);
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
