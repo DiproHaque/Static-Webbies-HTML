@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hero Quest - Knowledge Battle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* Start Screen */
+        .start-screen {
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .start-screen h1 {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .start-screen p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        /* Game Screen */
+        .game-screen {
+            display: none;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 40px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .level-info {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .chances-info {
+            font-size: 18px;
+        }
+
+        .heart {
+            display: inline-block;
+            color: #ff6b6b;
+            font-size: 24px;
+            margin: 0 2px;
+        }
+
+        .heart.lost {
+            opacity: 0.3;
+        }
+
+        /* Battle Arena */
+        .battle-arena {
+            padding: 40px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .characters {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .character {
+            text-align: center;
+            flex: 1;
+        }
+
+        .character-sprite {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            background: #f0f0f0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+
+        .hero-sprite {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .villain-sprite {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .character-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .vs-text {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            align-self: center;
+            margin: 0 20px;
+        }
+
+        /* Question Area */
+        .question-area {
+            width: 100%;
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-type {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Feedback */
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .feedback.wrong {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        /* Attack Animation */
+        @keyframes attackHero {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(50px); }
+        }
+
+        @keyframes attackVillain {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-50px); }
+        }
+
+        .character-sprite.attacking-hero {
+            animation: attackHero 0.5s;
+        }
+
+        .character-sprite.attacking-villain {
+            animation: attackVillain 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .character-sprite.hit {
+            animation: shake 0.3s;
+        }
+
+        /* End Screen */
+        .end-screen {
+            display: none;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .end-screen h1 {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .hero-title {
+            font-size: 36px;
+            color: #764ba2;
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            font-size: 20px;
+            margin: 10px 0;
+            color: #555;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                width: 95%;
+            }
+
+            .start-screen h1, .end-screen h1 {
+                font-size: 32px;
+            }
+
+            .character-sprite {
+                width: 100px;
+                height: 100px;
+                font-size: 50px;
+            }
+
+            .vs-text {
+                font-size: 32px;
+            }
+
+            .question-text {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <h1>🗡️ HERO QUEST 🗡️</h1>
+            <p>Face 10 fearsome villains in an epic battle of knowledge!<br>
+            Answer Math and General Knowledge questions to defeat them.<br>
+            You have 3 chances per question. Prove your worth and earn your hero title!</p>
+            <button class="start-btn" onclick="startGame()">BEGIN QUEST</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-screen" id="gameScreen">
+            <div class="game-header">
+                <div class="level-info">Level <span id="currentLevel">1</span>/10</div>
+                <div class="chances-info">
+                    <span id="chancesDisplay"></span>
+                </div>
+            </div>
+
+            <div class="battle-arena">
+                <div class="characters">
+                    <div class="character">
+                        <div class="character-sprite hero-sprite" id="heroSprite">🦸</div>
+                        <div class="character-name">HERO</div>
+                    </div>
+                    <div class="vs-text">VS</div>
+                    <div class="character">
+                        <div class="character-sprite villain-sprite" id="villainSprite">👹</div>
+                        <div class="character-name" id="villainName">VILLAIN</div>
+                    </div>
+                </div>
+
+                <div class="question-area">
+                    <span class="question-type" id="questionType">MATH</span>
+                    <div class="question-text" id="questionText"></div>
+                    <input type="text" class="answer-input" id="answerInput" placeholder="Enter your answer...">
+                    <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">ATTACK!</button>
+                    <div class="feedback" id="feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- End Screen -->
+        <div class="end-screen" id="endScreen">
+            <h1>🎉 QUEST COMPLETE! 🎉</h1>
+            <div class="hero-title" id="finalTitle"></div>
+            <div class="stats">
+                <div class="stat-item">⚔️ Levels Completed: <strong id="levelsCompleted">0</strong></div>
+                <div class="stat-item">✅ Correct Answers: <strong id="correctCount">0</strong></div>
+                <div class="stat-item">❌ Wrong Answers: <strong id="wrongCount">0</strong></div>
+                <div class="stat-item">🎯 Accuracy: <strong id="accuracy">0%</strong></div>
+            </div>
+            <button class="restart-btn" onclick="location.reload()">NEW QUEST</button>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let currentLevel = 1;
+        let chances = 3;
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let currentQuestion = null;
+        let usedQuestions = [];
+
+        // Villains data (10 levels - increasingly scary)
+        const villains = [
+            { emoji: '👹', name: 'Goblin Grunt', color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+            { emoji: '🧟', name: 'Zombie Walker', color: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)' },
+            { emoji: '🧛', name: 'Vampire Lord', color: 'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)' },
+            { emoji: '🐺', name: 'Werewolf Alpha', color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' },
+            { emoji: '👻', name: 'Shadow Phantom', color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+            { emoji: '🤖', name: 'Cyber Destroyer', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+            { emoji: '🐉', name: 'Ancient Dragon', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+            { emoji: '👾', name: 'Alien Invader', color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
+            { emoji: '☠️', name: 'Death Knight', color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+            { emoji: '😈', name: 'Demon King', color: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)' }
+        ];
+
+        // 100 Math Questions
+        const mathQuestions = [
+            { q: "What is 15 + 27?", a: "42" },
+            { q: "What is 8 × 7?", a: "56" },
+            { q: "What is 144 ÷ 12?", a: "12" },
+            { q: "What is 50 - 23?", a: "27" },
+            { q: "What is 9²?", a: "81" },
+            { q: "What is the square root of 64?", a: "8" },
+            { q: "What is 25% of 200?", a: "50" },
+            { q: "What is 3 × 13?", a: "39" },
+            { q: "What is 100 - 37?", a: "63" },
+            { q: "What is 18 + 24?", a: "42" },
+            { q: "What is 6 × 9?", a: "54" },
+            { q: "What is 81 ÷ 9?", a: "9" },
+            { q: "What is 45 + 35?", a: "80" },
+            { q: "What is 12 × 5?", a: "60" },
+            { q: "What is 90 - 48?", a: "42" },
+            { q: "What is 7 × 8?", a: "56" },
+            { q: "What is the cube of 3?", a: "27" },
+            { q: "What is 10% of 500?", a: "50" },
+            { q: "What is 16 + 29?", a: "45" },
+            { q: "What is 11 × 11?", a: "121" },
+            { q: "What is 150 ÷ 5?", a: "30" },
+            { q: "What is 60 - 24?", a: "36" },
+            { q: "What is 5²?", a: "25" },
+            { q: "What is 13 × 4?", a: "52" },
+            { q: "What is 77 + 23?", a: "100" },
+            { q: "What is 8² - 4²?", a: "48" },
+            { q: "What is 121 ÷ 11?", a: "11" },
+            { q: "What is 19 + 31?", a: "50" },
+            { q: "What is 15 × 3?", a: "45" },
+            { q: "What is 200 - 85?", a: "115" },
+            { q: "What is the square root of 100?", a: "10" },
+            { q: "What is 33 + 47?", a: "80" },
+            { q: "What is 14 × 6?", a: "84" },
+            { q: "What is 96 ÷ 8?", a: "12" },
+            { q: "What is 50% of 180?", a: "90" },
+            { q: "What is 7² + 2²?", a: "53" },
+            { q: "What is 9 × 12?", a: "108" },
+            { q: "What is 135 - 67?", a: "68" },
+            { q: "What is 20 + 45?", a: "65" },
+            { q: "What is 17 × 5?", a: "85" },
+            { q: "What is 144 ÷ 6?", a: "24" },
+            { q: "What is 88 - 39?", a: "49" },
+            { q: "What is the cube of 4?", a: "64" },
+            { q: "What is 25 × 4?", a: "100" },
+            { q: "What is 72 + 38?", a: "110" },
+            { q: "What is 10²?", a: "100" },
+            { q: "What is 156 ÷ 12?", a: "13" },
+            { q: "What is 99 - 44?", a: "55" },
+            { q: "What is 6² × 2?", a: "72" },
+            { q: "What is 16 × 7?", a: "112" },
+            { q: "What is 250 - 125?", a: "125" },
+            { q: "What is the square root of 144?", a: "12" },
+            { q: "What is 27 + 48?", a: "75" },
+            { q: "What is 13 × 8?", a: "104" },
+            { q: "What is 180 ÷ 15?", a: "12" },
+            { q: "What is 75% of 80?", a: "60" },
+            { q: "What is 12² - 8²?", a: "80" },
+            { q: "What is 19 × 6?", a: "114" },
+            { q: "What is 111 + 89?", a: "200" },
+            { q: "What is 15² ÷ 5?", a: "45" },
+            { q: "What is 8 × 15?", a: "120" },
+            { q: "What is 225 ÷ 15?", a: "15" },
+            { q: "What is 130 - 78?", a: "52" },
+            { q: "What is the cube of 5?", a: "125" },
+            { q: "What is 22 × 5?", a: "110" },
+            { q: "What is 84 + 56?", a: "140" },
+            { q: "What is 11²?", a: "121" },
+            { q: "What is 169 ÷ 13?", a: "13" },
+            { q: "What is 200 - 97?", a: "103" },
+            { q: "What is 9 × 16?", a: "144" },
+            { q: "What is the square root of 169?", a: "13" },
+            { q: "What is 37 + 63?", a: "100" },
+            { q: "What is 18 × 7?", a: "126" },
+            { q: "What is 240 ÷ 16?", a: "15" },
+            { q: "What is 150 - 68?", a: "82" },
+            { q: "What is 13² - 12²?", a: "25" },
+            { q: "What is 21 × 4?", a: "84" },
+            { q: "What is 95 + 55?", a: "150" },
+            { q: "What is 14²?", a: "196" },
+            { q: "What is 196 ÷ 14?", a: "14" },
+            { q: "What is 20% of 250?", a: "50" },
+            { q: "What is 15 × 9?", a: "135" },
+            { q: "What is 175 - 89?", a: "86" },
+            { q: "What is the square root of 196?", a: "14" },
+            { q: "What is 48 + 72?", a: "120" },
+            { q: "What is 17 × 8?", a: "136" },
+            { q: "What is 288 ÷ 18?", a: "16" },
+            { q: "What is 12² + 5²?", a: "169" },
+            { q: "What is 23 × 6?", a: "138" },
+            { q: "What is 220 - 135?", a: "85" },
+            { q: "What is the cube of 6?", a: "216" },
+            { q: "What is 19² - 18²?", a: "37" },
+            { q: "What is 26 × 5?", a: "130" },
+            { q: "What is 157 + 93?", a: "250" },
+            { q: "What is 15²?", a: "225" },
+            { q: "What is 225 ÷ 25?", a: "9" },
+            { q: "What is 300 - 147?", a: "153" },
+            { q: "What is 16² ÷ 4?", a: "64" },
+            { q: "What is 24 × 8?", a: "192" }
+        ];
+
+        // 100 General Knowledge Questions
+        const gkQuestions = [
+            { q: "What is the capital of France?", a: "paris" },
+            { q: "How many continents are there?", a: "7" },
+            { q: "What is H2O commonly known as?", a: "water" },
+            { q: "Who painted the Mona Lisa?", a: "da vinci" },
+            { q: "What is the largest planet in our solar system?", a: "jupiter" },
+            { q: "How many days are in a leap year?", a: "366" },
+            { q: "What is the capital of Japan?", a: "tokyo" },
+            { q: "Who wrote Romeo and Juliet?", a: "shakespeare" },
+            { q: "What is the speed of light in km/s (rounded)?", a: "300000" },
+            { q: "How many bones are in the adult human body?", a: "206" },
+            { q: "What is the chemical symbol for gold?", a: "au" },
+            { q: "What year did World War II end?", a: "1945" },
+            { q: "What is the smallest country in the world?", a: "vatican" },
+            { q: "Who invented the telephone?", a: "bell" },
+            { q: "What is the largest ocean on Earth?", a: "pacific" },
+            { q: "How many hearts does an octopus have?", a: "3" },
+            { q: "What is the capital of Italy?", a: "rome" },
+            { q: "Who developed the theory of relativity?", a: "einstein" },
+            { q: "What is the boiling point of water in Celsius?", a: "100" },
+            { q: "How many planets are in our solar system?", a: "8" },
+            { q: "What is the capital of England?", a: "london" },
+            { q: "Who was the first person on the moon?", a: "armstrong" },
+            { q: "What gas do plants absorb from the atmosphere?", a: "co2" },
+            { q: "What is the largest mammal in the world?", a: "blue whale" },
+            { q: "How many sides does a hexagon have?", a: "6" },
+            { q: "What is the capital of Spain?", a: "madrid" },
+            { q: "Who wrote Harry Potter?", a: "rowling" },
+            { q: "What is the freezing point of water in Celsius?", a: "0" },
+            { q: "How many legs does a spider have?", a: "8" },
+            { q: "What is the capital of Germany?", a: "berlin" },
+            { q: "Who painted the Sistine Chapel ceiling?", a: "michelangelo" },
+            { q: "What is the hardest natural substance on Earth?", a: "diamond" },
+            { q: "How many teeth do adult humans typically have?", a: "32" },
+            { q: "What is the capital of Canada?", a: "ottawa" },
+            { q: "Who discovered penicillin?", a: "fleming" },
+            { q: "What is the largest desert in the world?", a: "sahara" },
+            { q: "How many strings does a standard guitar have?", a: "6" },
+            { q: "What is the capital of Australia?", a: "canberra" },
+            { q: "Who painted The Starry Night?", a: "van gogh" },
+            { q: "What is the smallest bone in the human body?", a: "stapes" },
+            { q: "How many colors are in a rainbow?", a: "7" },
+            { q: "What is the capital of Brazil?", a: "brasilia" },
+            { q: "Who invented the light bulb?", a: "edison" },
+            { q: "What is the longest river in the world?", a: "nile" },
+            { q: "How many sides does a triangle have?", a: "3" },
+            { q: "What is the capital of Russia?", a: "moscow" },
+            { q: "Who wrote The Odyssey?", a: "homer" },
+            { q: "What is the main gas in Earth's atmosphere?", a: "nitrogen" },
+            { q: "How many chambers does the human heart have?", a: "4" },
+            { q: "What is the capital of China?", a: "beijing" },
+            { q: "Who discovered gravity when an apple fell?", a: "newton" },
+            { q: "What is the tallest mountain in the world?", a: "everest" },
+            { q: "How many degrees are in a circle?", a: "360" },
+            { q: "What is the capital of Egypt?", a: "cairo" },
+            { q: "Who composed the Four Seasons?", a: "vivaldi" },
+            { q: "What is the chemical symbol for water?", a: "h2o" },
+            { q: "How many weeks are in a year?", a: "52" },
+            { q: "What is the capital of India?", a: "delhi" },
+            { q: "Who wrote 1984?", a: "orwell" },
+            { q: "What is the closest star to Earth?", a: "sun" },
+            { q: "How many minutes are in an hour?", a: "60" },
+            { q: "What is the capital of Greece?", a: "athens" },
+            { q: "Who invented the airplane?", a: "wright" },
+            { q: "What is the largest island in the world?", a: "greenland" },
+            { q: "How many sides does a pentagon have?", a: "5" },
+            { q: "What is the capital of South Korea?", a: "seoul" },
+            { q: "Who painted the Birth of Venus?", a: "botticelli" },
+            { q: "What is the hottest planet in our solar system?", a: "venus" },
+            { q: "How many seconds are in a minute?", a: "60" },
+            { q: "What is the capital of Mexico?", a: "mexico city" },
+            { q: "Who discovered America in 1492?", a: "columbus" },
+            { q: "What is the smallest planet in our solar system?", a: "mercury" },
+            { q: "How many months have 31 days?", a: "7" },
+            { q: "What is the capital of Argentina?", a: "buenos aires" },
+            { q: "Who wrote The Great Gatsby?", a: "fitzgerald" },
+            { q: "What is the chemical symbol for oxygen?", a: "o" },
+            { q: "How many hours are in a day?", a: "24" },
+            { q: "What is the capital of Turkey?", a: "ankara" },
+            { q: "Who invented the printing press?", a: "gutenberg" },
+            { q: "What is the deepest ocean trench?", a: "mariana" },
+            { q: "How many sides does an octagon have?", a: "8" },
+            { q: "What is the capital of Portugal?", a: "lisbon" },
+            { q: "Who wrote Pride and Prejudice?", a: "austen" },
+            { q: "What is the most abundant element in the universe?", a: "hydrogen" },
+            { q: "How many days are in February during a leap year?", a: "29" },
+            { q: "What is the capital of Sweden?", a: "stockholm" },
+            { q: "Who composed Symphony No. 9?", a: "beethoven" },
+            { q: "What is the fastest land animal?", a: "cheetah" },
+            { q: "How many players are on a soccer team?", a: "11" },
+            { q: "What is the capital of Norway?", a: "oslo" },
+            { q: "Who wrote To Kill a Mockingbird?", a: "lee" },
+            { q: "What is the largest organ in the human body?", a: "skin" },
+            { q: "How many zeros are in one million?", a: "6" },
+            { q: "What is the capital of Switzerland?", a: "bern" },
+            { q: "Who painted The Last Supper?", a: "da vinci" },
+            { q: "What is the smallest unit of life?", a: "cell" },
+            { q: "How many sides does a square have?", a: "4" },
+            { q: "What is the capital of Poland?", a: "warsaw" }
+        ];
+
+        // Initialize game
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').style.display = 'block';
+            loadLevel();
+        }
+
+        // Load current level
+        function loadLevel() {
+            chances = 3;
+            updateChances();
+            loadVillain();
+            loadQuestion();
+        }
+
+        // Load villain for current level
+        function loadVillain() {
+            const villain = villains[currentLevel - 1];
+            document.getElementById('villainSprite').textContent = villain.emoji;
+            document.getElementById('villainSprite').style.background = villain.color;
+            document.getElementById('villainName').textContent = villain.name;
+            document.getElementById('currentLevel').textContent = currentLevel;
+        }
+
+        // Load random question
+        function loadQuestion() {
+            const isMath = Math.random() > 0.5;
+            const questionPool = isMath ? mathQuestions : gkQuestions;
+            
+            // Get random question that hasn't been used
+            let question;
+            let attempts = 0;
+            do {
+                question = questionPool[Math.floor(Math.random() * questionPool.length)];
+                attempts++;
+            } while (usedQuestions.includes(question.q) && attempts < 50);
+            
+            usedQuestions.push(question.q);
+            currentQuestion = question;
+            
+            document.getElementById('questionType').textContent = isMath ? 'MATH' : 'GENERAL KNOWLEDGE';
+            document.getElementById('questionType').style.background = isMath ? '#667eea' : '#11998e';
+            document.getElementById('questionText').textContent = question.q;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('answerInput').focus();
+        }
+
+        // Update chances display
+        function updateChances() {
+            const hearts = [];
+            for (let i = 0; i < 3; i++) {
+                hearts.push(`<span class="heart ${i >= chances ? 'lost' : ''}">❤️</span>`);
+            }
+            document.getElementById('chancesDisplay').innerHTML = hearts.join('');
+        }
+
+        // Check answer
+        function checkAnswer() {
+            const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
+            const correctAnswer = currentQuestion.a.toLowerCase();
+            
+            if (!userAnswer) return;
+            
+            document.getElementById('submitBtn').disabled = true;
+            
+            // Check if answer is correct (allow some flexibility)
+            const isCorrect = userAnswer === correctAnswer || correctAnswer.includes(userAnswer) || userAnswer.includes(correctAnswer);
+            
+            if (isCorrect) {
+                correctAnswers++;
+                showFeedback('correct', '✅ Correct! Hero attacks!');
+                animateAttack('hero');
+                
+                setTimeout(() => {
+                    if (currentLevel < 10) {
+                        currentLevel++;
+                        loadLevel();
+                    } else {
+                        endGame();
+                    }
+                }, 2000);
+            } else {
+                wrongAnswers++;
+                chances--;
+                updateChances();
+                
+                if (chances > 0) {
+                    showFeedback('wrong', `❌ Wrong! Try again. Correct answer was: ${currentQuestion.a}`);
+                    animateAttack('villain');
+                    
+                    setTimeout(() => {
+                        loadQuestion();
+                    }, 2500);
+                } else {
+                    showFeedback('wrong', `💀 Game Over! The correct answer was: ${currentQuestion.a}`);
+                    animateAttack('villain');
+                    
+                    setTimeout(() => {
+                        endGame();
+                    }, 3000);
+                }
+            }
+        }
+
+        // Show feedback
+        function showFeedback(type, message) {
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback ' + type;
+            feedback.textContent = message;
+        }
+
+        // Animate attack
+        function animateAttack(attacker) {
+            const heroSprite = document.getElementById('heroSprite');
+            const villainSprite = document.getElementById('villainSprite');
+            
+            if (attacker === 'hero') {
+                heroSprite.classList.add('attacking-hero');
+                setTimeout(() => {
+                    villainSprite.classList.add('hit');
+                    heroSprite.classList.remove('attacking-hero');
+                }, 250);
+                setTimeout(() => {
+                    villainSprite.classList.remove('hit');
+                }, 550);
+            } else {
+                villainSprite.classList.add('attacking-villain');
+                setTimeout(() => {
+                    heroSprite.classList.add('hit');
+                    villainSprite.classList.remove('attacking-villain');
+                }, 250);
+                setTimeout(() => {
+                    heroSprite.classList.remove('hit');
+                }, 550);
+            }
+        }
+
+        // End game
+        function endGame() {
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('endScreen').style.display = 'block';
+            
+            const levelsCompleted = currentLevel - 1;
+            const totalQuestions = correctAnswers + wrongAnswers;
+            const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+            
+            document.getElementById('levelsCompleted').textContent = levelsCompleted;
+            document.getElementById('correctCount').textContent = correctAnswers;
+            document.getElementById('wrongCount').textContent = wrongAnswers;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            
+            // Generate hero title based on performance
+            const title = generateHeroTitle(levelsCompleted, accuracy);
+            document.getElementById('finalTitle').textContent = title;
+        }
+
+        // Generate hero title
+        function generateHeroTitle(levels, accuracy) {
+            const titles = {
+                perfect: [
+                    "The Omniscient Oracle",
+                    "Master of All Knowledge",
+                    "The Legendary Scholar",
+                    "Supreme Wisdom Keeper",
+                    "The Unstoppable Genius"
+                ],
+                excellent: [
+                    "The Brilliant Sage",
+                    "Knowledge Champion",
+                    "The Wise Warrior",
+                    "Guardian of Truth",
+                    "The Enlightened One"
+                ],
+                good: [
+                    "The Determined Scholar",
+                    "Seeker of Wisdom",
+                    "The Brave Learner",
+                    "Knowledge Warrior",
+                    "The Persistent Mind"
+                ],
+                moderate: [
+                    "The Aspiring Hero",
+                    "Student of Life",
+                    "The Curious Explorer",
+                    "Knowledge Apprentice",
+                    "The Growing Mind"
+                ],
+                beginner: [
+                    "The Beginner's Journey",
+                    "First Steps Taken",
+                    "The Starting Hero",
+                    "Novice Adventurer",
+                    "The Learning Path"
+                ]
+            };
+            
+            let category;
+            if (levels === 10 && accuracy === 100) {
+                category = titles.perfect;
+            } else if (levels >= 8 && accuracy >= 80) {
+                category = titles.excellent;
+            } else if (levels >= 5 && accuracy >= 60) {
+                category = titles.good;
+            } else if (levels >= 3) {
+                category = titles.moderate;
+            } else {
+                category = titles.beginner;
+            }
+            
+            return category[Math.floor(Math.random() * category.length)];
+        }
+
+        // Allow Enter key to submit
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('answerInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !document.getElementById('submitBtn').disabled) {
+                    checkAnswer();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
