@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WRONG NUMBER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Background */
+.bg-room {
+    position: fixed;
+    inset: 0;
+    background: 
+        radial-gradient(circle at 30% 50%, rgba(80, 0, 0, 0.15), transparent 60%),
+        linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)),
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23050505" width="100" height="100"/></svg>');
+    filter: blur(1px);
+    z-index: 0;
+}
+
+/* Phone */
+.phone {
+    position: relative;
+    width: min(430px, 96vw);
+    height: min(780px, 94vh);
+    background: #000;
+    border-radius: 42px;
+    border: 14px solid #0f0f0f;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.9), inset 0 0 30px rgba(80, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 10;
+}
+
+/* Glitch */
+@keyframes glitch {
+    0%, 100% { transform: translate(0); filter: hue-rotate(0deg); }
+    20% { transform: translate(-3px, 3px); filter: hue-rotate(90deg); }
+    40% { transform: translate(3px, -3px); filter: hue-rotate(180deg); }
+    60% { transform: translate(-3px, -3px); filter: hue-rotate(270deg); }
+    80% { transform: translate(3px, 3px); filter: hue-rotate(360deg); }
+}
+
+.phone.glitch {
+    animation: glitch 0.4s;
+}
+
+@keyframes screenStatic {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 0.15; }
+}
+
+.phone.static::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.1) 0px,
+        rgba(0, 0, 0, 0.1) 2px,
+        rgba(255, 255, 255, 0.1) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+    animation: screenStatic 0.2s infinite;
+}
+
+/* Status bar */
+.status-bar {
+    background: #000;
+    padding: 10px 22px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+    font-size: 14px;
+}
+
+.status-bar .time {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.status-bar .icons {
+    display: flex;
+    gap: 8px;
+    font-size: 15px;
+}
+
+/* Chat header */
+.chat-header {
+    background: #1c1c1e;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid #2c2c2e;
+}
+
+.back-btn {
+    font-size: 22px;
+    color: #0a84ff;
+    cursor: pointer;
+}
+
+.contact-info {
+    flex: 1;
+}
+
+.contact-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.contact-status {
+    font-size: 13px;
+    color: #8e8e93;
+    margin-top: 2px;
+}
+
+/* Messages */
+.messages {
+    flex: 1;
+    background: #000;
+    padding: 18px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.messages::-webkit-scrollbar {
+    width: 5px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+    background: #3a3a3c;
+    border-radius: 3px;
+}
+
+/* Message bubble */
+.message {
+    max-width: 82%;
+    padding: 12px 16px;
+    border-radius: 20px;
+    font-size: 15px;
+    line-height: 1.6;
+    word-wrap: break-word;
+    animation: msgSlide 0.4s ease;
+    position: relative;
+}
+
+@keyframes msgSlide {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message.received {
+    align-self: flex-start;
+    background: #1c1c1e;
+    color: #fff;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background: #0a84ff;
+    color: #fff;
+}
+
+.message.threat {
+    background: linear-gradient(135deg, #1a0000, #330000);
+    color: #ffcccc;
+    border: 1px solid #660000;
+    box-shadow: 0 0 25px rgba(139, 0, 0, 0.6), inset 0 0 15px rgba(255, 0, 0, 0.1);
+}
+
+.message.extreme-threat {
+    background: linear-gradient(135deg, #330000, #660000);
+    color: #ff6666;
+    border: 1px solid #990000;
+    box-shadow: 0 0 35px rgba(255, 0, 0, 0.8), inset 0 0 20px rgba(255, 0, 0, 0.2);
+    animation: msgSlide 0.4s ease, threatPulse 2s infinite;
+}
+
+@keyframes threatPulse {
+    0%, 100% { box-shadow: 0 0 35px rgba(255, 0, 0, 0.8); }
+    50% { box-shadow: 0 0 50px rgba(255, 0, 0, 1); }
+}
+
+.timestamp {
+    font-size: 11px;
+    color: #8e8e93;
+    margin-top: 6px;
+    text-align: right;
+}
+
+/* Typing indicator */
+.typing-indicator {
+    align-self: flex-start;
+    background: #1c1c1e;
+    padding: 16px 20px;
+    border-radius: 20px;
+    display: none;
+}
+
+.typing-indicator.active {
+    display: flex;
+    gap: 5px;
+    animation: msgSlide 0.4s ease;
+}
+
+.typing-indicator span {
+    width: 9px;
+    height: 9px;
+    background: #8e8e93;
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-10px); }
+}
+
+/* Choices */
+.choices {
+    padding: 18px;
+    background: #000;
+    border-top: 1px solid #2c2c2e;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    display: none;
+}
+
+.choices.active {
+    display: flex;
+}
+
+.choice-btn {
+    background: #1c1c1e;
+    color: #fff;
+    border: 1px solid #3a3a3c;
+    padding: 16px 20px;
+    border-radius: 14px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+}
+
+.choice-btn:hover {
+    background: #2c2c2e;
+    border-color: #0a84ff;
+    transform: translateX(4px);
+}
+
+.choice-btn:active {
+    transform: scale(0.97);
+}
+
+.choice-btn.danger {
+    border-color: #8b0000;
+    background: #0f0000;
+}
+
+.choice-btn.danger:hover {
+    background: #1a0000;
+    border-color: #ff0000;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+}
+
+/* Start screen */
+#startScreen {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.97);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    gap: 35px;
+    text-align: center;
+    padding: 25px;
+}
+
+.game-title {
+    font-size: clamp(38px, 9vw, 64px);
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 0 50px rgba(255, 0, 0, 0.7), 0 0 20px rgba(255, 0, 0, 0.5);
+    letter-spacing: 3px;
+}
+
+.game-subtitle {
+    font-size: clamp(15px, 2.2vw, 19px);
+    color: #999;
+    max-width: 480px;
+    line-height: 1.8;
+}
+
+.warning-text {
+    font-size: clamp(12px, 1.5vw, 15px);
+    color: #ff6666;
+    max-width: 400px;
+    line-height: 1.7;
+    padding: 15px;
+    border: 1px solid #660000;
+    border-radius: 10px;
+    background: rgba(20, 0, 0, 0.5);
+}
+
+.start-btn {
+    background: #0a84ff;
+    color: #fff;
+    border: none;
+    padding: 18px 55px;
+    border-radius: 14px;
+    font-size: 19px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 1px;
+}
+
+.start-btn:hover {
+    background: #0066cc;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(10, 132, 255, 0.5);
+}
+
+/* Ending screen */
+#endingScreen {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.98);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    gap: 30px;
+    text-align: center;
+    padding: 25px;
+}
+
+#endingScreen.show {
+    display: flex;
+    animation: fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.ending-title {
+    font-size: clamp(32px, 7vw, 54px);
+    font-weight: 800;
+    margin-bottom: 12px;
+    text-shadow: 0 0 30px currentColor;
+}
+
+.ending-title.survived { color: #32d74b; }
+.ending-title.paranoid { color: #ff9f0a; }
+.ending-title.trapped { color: #ff453a; }
+
+.ending-text {
+    font-size: clamp(16px, 2.2vw, 19px);
+    color: #d1d1d6;
+    max-width: 550px;
+    line-height: 2;
+    margin-bottom: 25px;
+}
+
+.restart-btn {
+    background: #1c1c1e;
+    color: #fff;
+    border: 1px solid #3a3a3c;
+    padding: 16px 45px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Inter', sans-serif;
+}
+
+.restart-btn:hover {
+    background: #2c2c2e;
+    border-color: #0a84ff;
+    transform: translateY(-2px);
+}
+
+/* Vibration */
+@keyframes vibrate {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    10% { transform: translate(-3px, -3px) rotate(-1deg); }
+    20% { transform: translate(3px, 3px) rotate(1deg); }
+    30% { transform: translate(-3px, 3px) rotate(-1deg); }
+    40% { transform: translate(3px, -3px) rotate(1deg); }
+    50% { transform: translate(-3px, -3px) rotate(-1deg); }
+    60% { transform: translate(3px, 3px) rotate(1deg); }
+    70% { transform: translate(-3px, 3px) rotate(-1deg); }
+    80% { transform: translate(3px, -3px) rotate(1deg); }
+    90% { transform: translate(-3px, -3px) rotate(-1deg); }
+}
+
+.phone.vibrate {
+    animation: vibrate 0.6s;
+}
+
+</style>
+</head>
+<body>
+
+<div class="bg-room"></div>
+
+<!-- Start Screen -->
+<div id="startScreen">
+    <div class="game-title">WRONG NUMBER</div>
+    <div class="game-subtitle">
+        আপনি একটি অচেনা নম্বর থেকে মেসেজ পাবেন।<br>
+        প্রথমে মনে হবে সাধারণ ভুল নম্বর...<br>
+        কিন্তু ধীরে ধীরে... সবকিছু বদলে যাবে।
+    </div>
+    <div class="warning-text">
+        ⚠️ সতর্কতা: এই গেমটিতে মানসিক চাপ সৃষ্টিকারী content রয়েছে।<br>
+        রাতে একা খেলার পরামর্শ দেওয়া হচ্ছে না।
+    </div>
+    <button class="start-btn" onclick="startGame()">শুরু করুন</button>
+</div>
+
+<!-- Phone -->
+<div class="phone" id="phone">
+    <div class="status-bar">
+        <div class="time" id="currentTime">11:47 PM</div>
+        <div class="icons">
+            <span>📶</span>
+            <span>🔋</span>
+        </div>
+    </div>
+
+    <div class="chat-header">
+        <div class="back-btn">‹</div>
+        <div class="contact-info">
+            <div class="contact-name" id="contactName">Unknown</div>
+            <div class="contact-status" id="contactStatus">অচেনা নম্বর</div>
+        </div>
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="typing-indicator" id="typingIndicator">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <div class="choices" id="choices"></div>
+</div>
+
+<!-- Ending Screen -->
+<div id="endingScreen">
+    <div class="ending-title" id="endingTitle"></div>
+    <div class="ending-text" id="endingText"></div>
+    <button class="restart-btn" onclick="location.reload()">আবার খেলুন</button>
+</div>
+
+<script>
+// ===== STATE =====
+let G = {
+    step: 0,
+    choices: [],
+    fear: 0
+};
+
+// ===== HORRIFIC STORY =====
+const STORY = [
+    // 0
+    {
+        sender: 'them',
+        text: 'হ্যালো! আমার প্যাকেজটা পৌঁছেছে তো? আজকে সকালেই পাঠিয়েছিলাম। লাল রঙের বাক্সে মোড়ানো ছিল, তোমার নামের ট্যাগ লাগানো।',
+        delay: 1500
+    },
+    // 1
+    {
+        sender: 'choice',
+        choices: [
+            { text: '❓ আমি কোনো প্যাকেজ অর্ডার করিনি। আপনি কে? ভুল নম্বরে মেসেজ করেছেন মনে হয়।', next: 2 },
+            { text: '🤔 না, কিছু পাইনি। তবে আমার কোনো প্যাকেজ আসার কথাও নয়। নিশ্চয়ই ভুল হয়েছে।', next: 2 }
+        ]
+    },
+    // 2
+    {
+        sender: 'them',
+        text: 'ওহ... আমি খুবই দুঃখিত। ভুল নম্বর। আমার বন্ধুর নাম্বারের সাথে মিলে গেছে বোধহয়। আবার বিরক্ত করব না। 😅',
+        delay: 2500
+    },
+    // 3
+    {
+        sender: 'them',
+        text: '...',
+        delay: 4000
+    },
+    // 4
+    {
+        sender: 'them',
+        text: 'তবে একটা কথা... তোমার নাম কী? তোমার ভয়েস টোনটা খুব চেনা চেনা মনে হচ্ছে। যেন আগেও কথা হয়েছে কারও সাথে।',
+        delay: 3000
+    },
+    // 5
+    {
+        sender: 'choice',
+        choices: [
+            { text: '❌ এটা আপনার জানার দরকার নেই। আর মেসেজ করবেন না।', next: 6 },
+            { text: '🛑 আমি জানি না আপনি কে, কিন্তু এই নম্বরে আর মেসেজ দেবেন না।', next: 6 }
+        ]
+    },
+    // 6
+    {
+        sender: 'them',
+        text: 'ঠিক আছে, ঠিক আছে... রাগ করো না। আমি তো শুধু নিশ্চিত হতে চেয়েছিলাম।',
+        delay: 3000
+    },
+    // 7
+    {
+        sender: 'them',
+        text: 'কিন্তু তুমি জানো... আমি আসলেই ভাবছিলাম যে আমরা হয়তো আগে দেখা হয়েছিল। তোমার এলাকাটা ঠিক কোথায়? আমার মনে হয় আমি ওই এলাকায় কয়েকবার গিয়েছি।',
+        delay: 3500,
+        threat: true
+    },
+    // 8
+    {
+        sender: 'choice',
+        choices: [
+            { text: '😠 এটা একদম অনুচিত! আমার এলাকা সম্পর্কে জানতে চাইছেন কেন?', next: 9 },
+            { text: '🚫 আর একটা মেসেজ করলে পুলিশে রিপোর্ট করব। এখনই বন্ধ করুন।', next: 14 }
+        ]
+    },
+    // 9
+    {
+        sender: 'them',
+        text: 'পুলিশ? 😂 তুমি কি সিরিয়াস? আমি তো শুধু কথা বলছিলাম। তবে ঠিক আছে... তুমি যদি এভাবে রিঅ্যাক্ট করো, তাহলে আমিও একটু সিরিয়াস হই।',
+        delay: 3500
+    },
+    // 10
+    {
+        sender: 'them',
+        text: 'তুমি এখন বাসায় একা আছো, তাই না? আর তোমার পরনে নীল রঙের টিশার্ট। কালো প্যান্ট। তুমি এখন সোফায় বসে আছো, ফোনটা হাতে ধরে। সামনের টেবিলে একটা কফির মগ রাখা।',
+        delay: 4000,
+        threat: true
+    },
+    // 11
+    {
+        sender: 'them',
+        text: 'এবং সবচেয়ে মজার ব্যাপার... তোমার পেছনের জানালাটা... সেটা খোলা আছে। পর্দাটা একটু নড়ছে। বাতাস আসছে নাকি অন্য কিছু? 😊',
+        delay: 4500,
+        extreme: true
+    },
+    // 12
+    {
+        sender: 'choice',
+        choices: [
+            { text: '🏃 আমি এখনই বাড়ি থেকে বের হচ্ছি!', next: 19, danger: true },
+            { text: '🚪 পেছনের জানালা চেক করতে যাচ্ছি এখনই', next: 13, danger: true },
+            { text: '📞 পুলিশকে কল করছি, আর তারা তোমাকে ট্রেস করবে', next: 14 }
+        ]
+    },
+    // 13 - Check window path (BAD END)
+    {
+        sender: 'them',
+        text: 'তুমি জানালার দিকে যাচ্ছো? আমি দেখতে পাচ্ছি তোমার পা নড়ছে। ধীরে ধীরে এগিয়ে যাচ্ছো।',
+        delay: 3000,
+        extreme: true
+    },
+    {
+        sender: 'them',
+        text: 'আরে না না... খোলো না প্লিজ। 😊',
+        delay: 2500,
+        extreme: true
+    },
+    {
+        sender: 'them',
+        text: 'দেরি হয়ে গেছে।',
+        delay: 2000,
+        extreme: true
+    },
+    {
+        sender: 'them',
+        text: 'আমি ইতোমধ্যে ভেতরে ঢুকে গেছি। তুমি যখন জানালার দিকে তাকিয়ে ছিলে, আমি তখন দরজা দিয়ে ঢুকেছি। তোমার পেছনে আছি। ঘুরে দেখবে? 🙂',
+        delay: 4000,
+        extreme: true,
+        ending: 'trapped'
+    },
+    // 14 - Police path
+    {
+        sender: 'them',
+        text: 'পুলিশ? তুমি সত্যিই ভাবছো পুলিশ কিছু করতে পারবে? 😂',
+        delay: 3000
+    },
+    {
+        sender: 'them',
+        text: 'তারা আসার আগেই আমি অনেক দূরে চলে যাব। আমি জানি এই এলাকার প্রতিটি গলি, প্রতিটি রাস্তা। এখানে আমি কতবার এসেছি তুমি জানো? প্রতিটা বাড়ির জানালা, প্রতিটা দরজার অবস্থান আমার মুখস্থ।',
+        delay: 4500,
+        threat: true
+    },
+    {
+        sender: 'them',
+        text: 'আর সবচেয়ে মজার ব্যাপার... পুলিশ যখন তোমার রিপোর্ট নেবে, তখন তারা কিছু পাবে না। কোনো প্রমাণ নেই। এটা শুধু একটা ফোন নম্বর। আর এই নম্বর? এটা কাল থেকে আর কাজ করবে না।',
+        delay: 5000,
+        threat: true
+    },
+    {
+        sender: 'them',
+        text: 'কিন্তু আমি থাকব। সবসময়। কখনো তোমার জানালার বাইরে। কখনো সুপার মার্কেটে তোমার পেছনে। কখনো রাস্তায় হাঁটার সময় পাশ দিয়ে চলে যাব। তুমি জানবে না। কিন্তু আমি জানব। 👁',
+        delay: 5500,
+        extreme: true
+    },
+    {
+        sender: 'them',
+        text: 'শীঘ্রই দেখা হবে। ততদিন... ভালো থেকো। 😊',
+        delay: 3000,
+        extreme: true,
+        ending: 'paranoid'
+    },
+    // 19 - Escape path
+    {
+        sender: 'them',
+        text: 'ওহ... পালাচ্ছো? বুদ্ধিমানের কাজ। সত্যিই। আমি impressed।',
+        delay: 3000
+    },
+    {
+        sender: 'them',
+        text: 'কিন্তু জানো কী? আমি তোমাকে এখন জানি। তোমার চেহারা, তোমার বাসা, তোমার অভ্যাস। আমি জানি তুমি রাত ১১টার পর কখনো বাইরে যাও না। জানি তুমি শুক্রবার সন্ধ্যায় কোন রেস্তোরাঁয় যাও।',
+        delay: 5000,
+        threat: true
+    },
+    {
+        sender: 'them',
+        text: 'আমি তোমার জীবনের একটা অংশ হয়ে গেছি। তুমি এখন যতই পালাও না কেন, আমি তোমার মাথায় থাকব। প্রতিটা অচেনা মানুষ দেখলে ভাববে... এটা কি সে?',
+        delay: 5500,
+        threat: true
+    },
+    {
+        sender: 'them',
+        text: 'প্রতিটা ফোন কল, প্রতিটা দরজার শব্দ, প্রতিটা জানালার নড়াচড়া... তুমি ভয় পাবে। কারণ তুমি জানবে না কখন আমি সত্যিই আসব।',
+        delay: 5000,
+        extreme: true
+    },
+    {
+        sender: 'them',
+        text: 'আর সেটাই সবচেয়ে ভয়ংকর, তাই না? না জানা। অপেক্ষা করা। জানা যে... আমি আসব। তুমি শুধু জানো না কখন। 😊',
+        delay: 4500,
+        extreme: true
+    },
+    {
+        sender: 'them',
+        text: 'ততক্ষণ পর্যন্ত... সাবধানে থেকো। খুব সাবধানে। 👁',
+        delay: 3500,
+        extreme: true,
+        ending: 'survived'
+    }
+];
+
+// ===== START =====
+function startGame() {
+    document.getElementById('startScreen').style.display = 'none';
+    updateTime();
+    setInterval(updateTime, 60000);
+    nextMessage();
+}
+
+// ===== TIME =====
+function updateTime() {
+    const now = new Date();
+    const hours = now.getHours();
+    const mins = now.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    document.getElementById('currentTime').textContent = 
+        `${displayHours}:${mins} ${ampm}`;
+}
+
+// ===== NEXT MESSAGE =====
+function nextMessage() {
+    if (G.step >= STORY.length) return;
+
+    const msg = STORY[G.step];
+
+    if (msg.sender === 'choice') {
+        showChoices(msg.choices);
+    } else {
+        showTyping();
+        setTimeout(() => {
+            hideTyping();
+            addMessage(msg.text, msg.sender, msg.threat, msg.extreme);
+            
+            if (msg.ending) {
+                setTimeout(() => showEnding(msg.ending), 3000);
+            } else {
+                G.step++;
+                setTimeout(nextMessage, msg.delay || 3000);
+            }
+        }, Math.min(msg.text.length * 30, 4000));
+    }
+}
+
+// ===== TYPING =====
+function showTyping() {
+    document.getElementById('typingIndicator').classList.add('active');
+    scrollToBottom();
+}
+
+function hideTyping() {
+    document.getElementById('typingIndicator').classList.remove('active');
+}
+
+// ===== ADD MESSAGE =====
+function addMessage(text, sender, isThreat = false, isExtreme = false) {
+    const container = document.getElementById('messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${sender === 'them' ? 'received' : 'sent'}`;
+    
+    if (isExtreme) {
+        msgDiv.classList.add('extreme-threat');
+        vibratePhone(true);
+        glitchScreen(true);
+        staticScreen();
+    } else if (isThreat) {
+        msgDiv.classList.add('threat');
+        vibratePhone(false);
+        glitchScreen(false);
+    }
+    
+    msgDiv.textContent = text;
+    container.appendChild(msgDiv);
+    scrollToBottom();
+}
+
+// ===== CHOICES =====
+function showChoices(choices) {
+    const container = document.getElementById('choices');
+    container.innerHTML = '';
+    container.classList.add('active');
+
+    choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = choice.danger ? 'choice-btn danger' : 'choice-btn';
+        btn.textContent = choice.text;
+        btn.onclick = () => {
+            addMessage(choice.text, 'sent');
+            container.classList.remove('active');
+            G.step = choice.next;
+            setTimeout(nextMessage, 1500);
+        };
+        container.appendChild(btn);
+    });
+}
+
+// ===== SCROLL =====
+function scrollToBottom() {
+    const container = document.getElementById('messages');
+    setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+    }, 100);
+}
+
+// ===== VIBRATE =====
+function vibratePhone(intense = false) {
+    const phone = document.getElementById('phone');
+    phone.classList.add('vibrate');
+    setTimeout(() => phone.classList.remove('vibrate'), intense ? 800 : 600);
+    
+    if (navigator.vibrate) {
+        navigator.vibrate(intense ? [200, 100, 200, 100, 200] : 300);
+    }
+}
+
+// ===== GLITCH =====
+function glitchScreen(intense = false) {
+    const phone = document.getElementById('phone');
+    phone.classList.add('glitch');
+    setTimeout(() => phone.classList.remove('glitch'), intense ? 500 : 400);
+}
+
+// ===== STATIC =====
+function staticScreen() {
+    const phone = document.getElementById('phone');
+    phone.classList.add('static');
+    setTimeout(() => phone.classList.remove('static'), 1000);
+}
+
+// ===== ENDING =====
+function showEnding(type) {
+    const screen = document.getElementById('endingScreen');
+    const title = document.getElementById('endingTitle');
+    const text = document.getElementById('endingText');
+
+    let endTitle, endText, endClass;
+
+    if (type === 'survived') {
+        endTitle = '🏃 SURVIVED... FOR NOW';
+        endText = 'আপনি সময়মতো বাড়ি থেকে বের হয়ে গেছেন। পুলিশ এসেছিল, তারা চারদিক তল্লাশি করেছিল, কিন্তু কাউকে খুঁজে পায়নি। কোনো প্রমাণও নেই।\n\nকিন্তু সেই কথাগুলো... সেই মেসেজগুলো... আপনার মাথা থেকে বের হবে না। প্রতিটা অচেনা মানুষ, প্রতিটা ফোন কল, প্রতিটা দরজার শব্দ... আপনি ভয় পাবেন। কারণ আপনি জানেন... সে কোথাও আছে। দেখছে। অপেক্ষা করছে।';
+        endClass = 'survived';
+    } else if (type === 'paranoid') {
+        endTitle = '👁 PARANOID';
+        endText = 'পুলিশ তদন্ত করেছিল। নম্বরটা ট্রেস করতে পারেনি। বার্নার ফোন ছিল, ইতোমধ্যে বন্ধ।\n\nতারা বলল এটা একটা প্র্যাঙ্ক কল ছিল। কোনো বিপদ নেই। কিন্তু আপনি জানেন... এটা প্র্যাঙ্ক ছিল না।\n\nসেই ব্যক্তি সত্যিই জানত আপনার ঘরের ভেতরের অবস্থা। সে দেখছিল। কিভাবে? কোথা থেকে?\n\nএখন প্রতি রাতে আপনি জানালার পর্দা টেনে ঘুমান। দরজায় দুটো তালা। কিন্তু তবুও... আপনি অনুভব করেন কেউ দেখছে। সবসময়।';
+        endClass = 'paranoid';
+    } else {
+        endTitle = '💀 TRAPPED';
+        endText = 'আপনি জানালার দিকে গেলেন। ধীরে ধীরে পর্দা সরালেন। বাইরে কিছু নেই। শুধু অন্ধকার।\n\nস্বস্তির নিঃশ্বাস ফেললেন। ফিরে তাকালেন...\n\n...এবং দেখলেন।\n\nঘরের কোণায় একটা ছায়া। নড়ছে না। শুধু দাঁড়িয়ে আছে। তাকিয়ে আছে।\n\nআপনি চিৎকার করতে গেলেন। কিন্তু কোনো শব্দ বের হলো না। সেই ছায়া এগিয়ে আসছে। ধীরে ধীরে।\n\nসেই ব্যক্তি ভেতরে ছিল। শুরু থেকেই ছিল। অপেক্ষা করছিল শুধু।';
+        endClass = 'trapped';
+    }
+
+    title.textContent = endTitle;
+    title.className = `ending-title ${endClass}`;
+    text.textContent = endText;
+    screen.classList.add('show');
+}
+
+</script>
+</body>
+</html>
