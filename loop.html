@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REWIND: The Maya Chen Paradox</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Orbitron:wght@500;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: #000; color: #0ff; overflow: hidden;
+        }
+
+        /* Glitch & Visual Effects */
+        .grid-bg {
+            position: fixed; inset: 0;
+            background: linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px),
+                        linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px; z-index: 0;
+        }
+
+        .container {
+            position: relative; width: min(850px, 95vw);
+            margin: 0 auto; padding: 20px; min-height: 100vh;
+            display: flex; flex-direction: column; z-index: 10;
+        }
+
+        /* HUD */
+        .hud-top {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 30px 0; font-family: 'Orbitron';
+        }
+
+        #timer { font-size: 60px; text-shadow: 0 0 20px #0ff; transition: 0.3s; }
+        .critical { color: #f00; text-shadow: 0 0 30px #f00; animation: shake 0.1s infinite; }
+
+        /* Scene Styling */
+        .scene-box {
+            background: rgba(0, 15, 15, 0.9); border: 2px solid #0ff;
+            padding: 40px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .scene-title { font-family: 'Orbitron'; font-size: 24px; color: #0ff; margin-bottom: 20px; }
+        .scene-text { font-size: 17px; line-height: 1.8; color: #0dd; margin-bottom: 30px; min-height: 100px; }
+
+        /* Choices */
+        .choices { display: flex; flex-direction: column; gap: 15px; }
+        .choice-btn {
+            background: rgba(0, 255, 255, 0.05); border: 1px solid #0aa;
+            color: #0ff; padding: 18px 25px; cursor: pointer;
+            transition: 0.3s; text-align: left; font-family: 'Space Mono';
+        }
+        .choice-btn:hover { background: rgba(0, 255, 255, 0.2); border-color: #0ff; padding-left: 35px; }
+        .btn-locked { color: #555; border-color: #333; cursor: not-allowed; opacity: 0.5; }
+
+        /* Notebook/Progress */
+        .notebook {
+            position: fixed; bottom: 30px; right: 30px;
+            background: rgba(0,0,0,0.8); border: 1px solid #0ff;
+            padding: 15px; width: 280px; font-size: 12px;
+        }
+        .progress-bar { width: 100%; height: 4px; background: #222; margin: 10px 0; }
+        #bar-fill { width: 0%; height: 100%; background: #0ff; transition: 0.5s; }
+
+        @keyframes shake { 0% { transform: translate(0,0); } 50% { transform: translate(-2px, 2px); } 100% { transform: translate(0,0); } }
+
+        .overlay {
+            position: fixed; inset: 0; background: #000; z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<div id="startScreen" class="overlay">
+    <h1 style="font-family: 'Orbitron'; font-size: 60px; letter-spacing: 10px; color: #0ff;">REWIND</h1>
+    <p style="margin: 20px 0; opacity: 0.7;">তুমি কি সত্যটা মনে রাখতে পারবে?</p>
+    <button class="choice-btn" onclick="startGame()" style="text-align: center; padding: 20px 50px;">INITIALIZE LOOP</button>
+</div>
+
+<div id="gameScreen" class="container" style="display:none;">
+    <div class="hud-top">
+        <div id="loopCounter">LOOP #01</div>
+        <div id="timer">05:00</div>
+    </div>
+
+    <div class="scene-box">
+        <div id="sceneTitle" class="scene-title"></div>
+        <div id="sceneText" class="scene-text"></div>
+        <div id="choices" class="choices"></div>
+    </div>
+
+    <div class="notebook">
+        <div style="color: #0ff;">MEMORY SYNC</div>
+        <div class="progress-bar"><div id="bar-fill"></div></div>
+        <div id="cluesList" style="max-height: 150px; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<div id="endingScreen" class="overlay" style="display:none;">
+    <h1 id="endingTitle" class="scene-title" style="font-size: 40px;"></h1>
+    <p id="endingText" style="margin: 20px; max-width: 600px; line-height: 2;"></p>
+    <button class="choice-btn" onclick="location.reload()">RE-ATTEMPT LOOP</button>
+</div>
+
+<script>
+// ===== GAME STATE =====
+let G = {
+    loop: 1,
+    timeLeft: 300,
+    clues: new Set(),
+    timerInterval: null,
+    isTyping: false
+};
+
+// 
+
+const STORY = {
+    "start": {
+        title: "⏰ LOOP START",
+        text: "তুমি জেগে উঠলে। মাথা ফেটে যাচ্ছে। দেয়ালে ঘড়ি বলছে ১১:৪৭। এই অন্ধকার রুম আর টেবিলের ধুলো... সব খুব চেনা লাগছে।",
+        choices: [
+            { text: "🚪 দরজা খোলার চেষ্টা করো", next: "door" },
+            { text: "📱 ফোনটা চেক করো", next: "phone" },
+            { text: "📝 ডায়েরিটা পড়ো", next: "diary", requireClue: "found_key", hidden: true }
+        ]
+    },
+    "door": {
+        title: "🚪 THE KEYPAD",
+        text: "দরজায় একটা ডিজিটাল লক। কোড চাচ্ছে। ১১:৪৭ ট্রাই করলে কিন্তু কাজ হলো না। কোডটা সম্ভবত সময়ের সাথে সম্পর্কিত।",
+        choices: [
+            { text: "🔢 ঘড়ির সময় দাও (1147)", next: "fail" },
+            { text: "🔢 লুপের লজিক ব্যবহার করো", next: "escape_path", requireClue: "dynamic_logic", hidden: true },
+            { text: "🔙 ফিরে যাও", next: "start" }
+        ]
+    },
+    "phone": {
+        title: "📱 LOCKED DEVICE",
+        text: "ফোনে একটি মেসেজ: 'মায়া, সময় শেষ হয়ে আসছে। মনে করার চেষ্টা করো ল্যাব-এ কী হয়েছিল।' স্ক্রিনে একটি তারিখ দেখা যাচ্ছে: ১৫ই মার্চ।",
+        choices: [
+            { text: "🔓 কোড ট্রাই করো (1503)", next: "phone_unlocked", clue: "phone_access" },
+            { text: "🔙 ফিরে যাও", next: "start" }
+        ]
+    },
+    "phone_unlocked": {
+        title: "📂 ACCESS GRANTED",
+        text: "ফোনের ভেতরে একটি অডিও ফাইল। তোমার নিজের কণ্ঠস্বর: 'যদি আমি এই লুপে আটকা পড়ি, তবে জানবে কোডটি হলো ১১:৪৭ + বর্তমান লুপ নম্বর।'",
+        choices: [
+            { text: "🔍 লজিকটা নোট করো", next: "start", clue: "dynamic_logic" }
+        ]
+    },
+    "fail": {
+        title: "❌ SYSTEM ERROR",
+        text: "ভুল কোড! হঠাৎ রুমের বাতিগুলো লাল হয়ে গেল। তোমার কান ফেটে যাচ্ছে উচ্চ শব্দে... তুমি আবার সেই ১১:৪৭ এ ফিরে যাচ্ছো।",
+        choices: [
+            { text: "🔄 লুপ রিসেট", next: "start", reset: true }
+        ]
+    },
+    "escape_path": {
+        title: "✅ DOOR OPENED",
+        text: "লক খুলে গেল! করিডোরের শেষে একটি বড় লাল বাটন। 'EMERGENCY SHUTDOWN'। কিন্তু পাশে লেখা: 'তুমি যদি সত্যটা না জানো, তবে রিসেট করলে পুরো মহাবিশ্ব মুছে যাবে।' তুমি কি মায়া চেন? না কি তুমিই এই ধ্বংসের কারণ?",
+        choices: [
+            { text: "🔴 রিসেট বাটন চাপ দাও (The Sacrifice)", next: "bad_end" },
+            { text: "🧠 সব মনে করার চেষ্টা করো", next: "true_end", requireClue: "full_truth", hidden: true }
+        ]
+    }
+};
+
+// 
+
+function typeWriter(text, i, cb) {
+    if (i < text.length) {
+        G.isTyping = true;
+        document.getElementById('sceneText').innerHTML = text.substring(0, i + 1) + "<span style='color:#0ff'>_</span>";
+        setTimeout(() => typeWriter(text, i + 1, cb), 25);
+    } else {
+        G.isTyping = false;
+        cb();
+    }
+}
+
+function renderScene(id) {
+    const scene = STORY[id];
+    document.getElementById('sceneTitle').textContent = scene.title;
+    document.getElementById('choices').innerHTML = '';
+    
+    typeWriter(scene.text, 0, () => {
+        scene.choices.forEach(c => {
+            if (c.hidden && !G.clues.has(c.requireClue)) return;
+            
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.textContent = c.text;
+            btn.onclick = () => {
+                if (c.clue) addClue(c.clue);
+                if (c.reset) resetLoop();
+                else if (c.next === "bad_end") showEnding("trapped");
+                else if (c.next === "true_end") showEnding("escaped");
+                else renderScene(c.next);
+            };
+            document.getElementById('choices').appendChild(btn);
+        });
+    });
+}
+
+function addClue(clue) {
+    if (G.clues.has(clue)) return;
+    G.clues.add(clue);
+    const list = document.getElementById('cluesList');
+    const item = document.createElement('div');
+    item.style.color = "#0f0";
+    item.textContent = "• " + clue.replace('_', ' ').toUpperCase();
+    list.prepend(item);
+    document.getElementById('bar-fill').style.width = (G.clues.size / 5 * 100) + "%";
+    
+    if(G.clues.size >= 2) G.clues.add("full_truth");
+}
+
+function startTimer() {
+    G.timeLeft = Math.max(60, 300 - (G.loop * 15)); // প্রতি লুপে ১৫ সেকেন্ড কমে যাবে
+    updateTimerDisplay();
+    G.timerInterval = setInterval(() => {
+        G.timeLeft--;
+        updateTimerDisplay();
+        if (G.timeLeft < 30) document.getElementById('timer').className = 'critical';
+        if (G.timeLeft <= 0) resetLoop();
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const m = Math.floor(G.timeLeft/60);
+    const s = G.timeLeft%60;
+    document.getElementById('timer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function resetLoop() {
+    clearInterval(G.timerInterval);
+    G.loop++;
+    document.getElementById('loopCounter').textContent = `LOOP #${G.loop.toString().padStart(2,'0')}`;
+    document.body.style.filter = "invert(1)";
+    setTimeout(() => {
+        document.body.style.filter = "none";
+        startTimer();
+        renderScene("start");
+    }, 500);
+}
+
+function startGame() {
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'flex';
+    startTimer();
+    renderScene("start");
+}
+
+function showEnding(type) {
+    clearInterval(G.timerInterval);
+    document.getElementById('gameScreen').style.display = 'none';
+    const screen = document.getElementById('endingScreen');
+    screen.style.display = 'flex';
+    
+    if (type === 'escaped') {
+        document.getElementById('endingTitle').textContent = "✅ PARADOX SOLVED";
+        document.getElementById('endingText').textContent = "তুমি মায়া চেন-কে লুপ থেকে মুক্ত করেছো। কিন্তু সে কি সত্যিই মুক্ত? না কি সে অন্য কোনো বড় লুপের অংশ হয়ে গেল? সত্যটা মায়ার সাথেই রয়ে গেল।";
+    } else {
+        document.getElementById('endingTitle').textContent = "❌ MEMORY ERASED";
+        document.getElementById('endingText').textContent = "যথেষ্ট তথ্য ছাড়াই তুমি সময়কে রিসেট করার চেষ্টা করেছিলে। এখন তুমি এই শূন্যতার মধ্যে হারিয়ে গেছো। মায়া চেন-এর কোনো অস্তিত্ব আর মহাবিশ্বে নেই।";
+    }
+}
+</script>
+</body>
+</html>
