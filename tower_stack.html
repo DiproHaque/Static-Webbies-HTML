@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tower Stack</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.game-container {
+    text-align: center;
+    position: relative;
+}
+
+.score {
+    font-size: 48px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.game-area {
+    position: relative;
+    width: 400px;
+    height: 600px;
+    background: #fff;
+    border: 3px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Tower base and platform */
+.tower-base {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    background: #2a2a2a;
+}
+
+.platform {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 10px;
+    background: #555;
+    border-radius: 5px;
+}
+
+/* Falling box */
+.falling-box {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #ff6b35, #ff8c42);
+    border: 2px solid #e85d30;
+    border-radius: 5px;
+    box-shadow: 0 4px 10px rgba(255, 107, 53, 0.4);
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+}
+
+/* Tower blocks */
+.tower-block {
+    position: absolute;
+    width: 80px;
+    height: 40px;
+    background: #4a4a4a;
+    border: 2px solid #333;
+    border-radius: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Screens */
+.start-screen,
+.game-over-screen {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    z-index: 100;
+}
+
+.start-screen.hidden,
+.game-over-screen.hidden {
+    display: none;
+}
+
+.title {
+    font-size: 42px;
+    font-weight: bold;
+    color: #333;
+}
+
+.instruction {
+    font-size: 18px;
+    color: #666;
+    max-width: 300px;
+    line-height: 1.6;
+}
+
+.btn {
+    padding: 15px 40px;
+    font-size: 20px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ff6b35, #ff8c42);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+}
+
+.btn:active {
+    transform: translateY(-1px);
+}
+
+.game-over-text {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+}
+
+.final-score {
+    font-size: 56px;
+    font-weight: bold;
+    color: #ff6b35;
+}
+
+/* Success animation */
+@keyframes stackSuccess {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.1); }
+}
+
+.stack-success {
+    animation: stackSuccess 0.3s ease;
+}
+
+/* Hint text */
+.hint {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: #999;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px 20px;
+    border-radius: 20px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="score" id="score">0</div>
+    
+    <div class="game-area" id="gameArea">
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <div class="title">TOWER STACK</div>
+            <div class="instruction">
+                স্পেসবার প্রেস করে বক্স stack করো!<br>
+                টাওয়ারের সাথে পারফেক্টলি align করতে হবে।
+            </div>
+            <button class="btn" onclick="startGame()">START GAME</button>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div class="game-over-screen hidden" id="gameOverScreen">
+            <div class="game-over-text">GAME OVER!</div>
+            <div class="final-score" id="finalScore">0</div>
+            <button class="btn" onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+        
+        <!-- Platform -->
+        <div class="platform"></div>
+        
+        <!-- Falling Box -->
+        <div class="falling-box" id="fallingBox"></div>
+        
+        <!-- Tower Base -->
+        <div class="tower-base" id="towerBase" style="height: 40px;"></div>
+        
+        <!-- Hint -->
+        <div class="hint" id="hint">Press SPACE to stack!</div>
+    </div>
+</div>
+
+<script>
+// ===== GAME STATE =====
+let game = {
+    score: 0,
+    towerHeight: 40,
+    fallingBox: null,
+    falling: false,
+    fallSpeed: 3,
+    gameRunning: false
+};
+
+// ===== ELEMENTS =====
+const gameArea = document.getElementById('gameArea');
+const fallingBox = document.getElementById('fallingBox');
+const towerBase = document.getElementById('towerBase');
+const scoreDisplay = document.getElementById('score');
+const startScreen = document.getElementById('startScreen');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const finalScoreDisplay = document.getElementById('finalScore');
+const hint = document.getElementById('hint');
+
+// ===== PREVENT SPACEBAR SCROLL =====
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        e.preventDefault();
+    }
+});
+
+// ===== START GAME =====
+function startGame() {
+    startScreen.classList.add('hidden');
+    game.gameRunning = true;
+    game.score = 0;
+    game.towerHeight = 40;
+    game.fallSpeed = 3;
+    
+    // Reset tower
+    towerBase.style.height = '40px';
+    towerBase.innerHTML = '';
+    
+    // Reset score
+    scoreDisplay.textContent = '0';
+    
+    // Start first box
+    dropNewBox();
+    
+    // Hide hint after 2 seconds
+    setTimeout(() => {
+        hint.style.opacity = '0';
+    }, 2000);
+}
+
+// ===== DROP NEW BOX =====
+function dropNewBox() {
+    if (!game.gameRunning) return;
+    
+    // Reset falling box position
+    fallingBox.style.top = '60px';
+    fallingBox.style.display = 'block';
+    game.falling = true;
+    
+    // Start falling
+    animateFall();
+}
+
+// ===== ANIMATE FALL =====
+function animateFall() {
+    if (!game.falling || !game.gameRunning) return;
+    
+    const currentTop = parseInt(fallingBox.style.top || '60');
+    const newTop = currentTop + game.fallSpeed;
+    
+    // Check if box went past bottom
+    if (newTop > 600) {
+        gameOver();
+        return;
+    }
+    
+    fallingBox.style.top = newTop + 'px';
+    requestAnimationFrame(animateFall);
+}
+
+// ===== HANDLE SPACEBAR =====
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && game.falling && game.gameRunning) {
+        stackBox();
+    }
+});
+
+// ===== STACK BOX =====
+function stackBox() {
+    game.falling = false;
+    
+    const boxTop = parseInt(fallingBox.style.top);
+    const towerTop = 600 - game.towerHeight;
+    
+    // Calculate distance from tower
+    const distance = Math.abs(boxTop + 40 - towerTop);
+    
+    // Check if box is aligned with tower (with some tolerance)
+    const tolerance = 15;
+    
+    if (distance <= tolerance) {
+        // SUCCESS!
+        successStack(boxTop);
+    } else {
+        // FAIL!
+        gameOver();
+    }
+}
+
+// ===== SUCCESS STACK =====
+function successStack(boxTop) {
+    // Hide falling box
+    fallingBox.style.display = 'none';
+    
+    // Create new tower block
+    const block = document.createElement('div');
+    block.className = 'tower-block';
+    block.style.bottom = game.towerHeight + 'px';
+    gameArea.appendChild(block);
+    
+    // Animate success
+    block.classList.add('stack-success');
+    setTimeout(() => block.classList.remove('stack-success'), 300);
+    
+    // Update tower height
+    game.towerHeight += 40;
+    towerBase.style.height = game.towerHeight + 'px';
+    
+    // Update score
+    game.score++;
+    scoreDisplay.textContent = game.score;
+    
+    // Increase difficulty
+    if (game.score % 5 === 0) {
+        game.fallSpeed += 0.5;
+    }
+    
+    // Drop next box
+    setTimeout(() => {
+        dropNewBox();
+    }, 500);
+}
+
+// ===== GAME OVER =====
+function gameOver() {
+    game.gameRunning = false;
+    game.falling = false;
+    fallingBox.style.display = 'none';
+    
+    // Show game over screen
+    finalScoreDisplay.textContent = game.score;
+    gameOverScreen.classList.remove('hidden');
+    hint.style.opacity = '1';
+}
+
+// ===== RESTART GAME =====
+function restartGame() {
+    gameOverScreen.classList.add('hidden');
+    
+    // Remove all tower blocks
+    const blocks = document.querySelectorAll('.tower-block');
+    blocks.forEach(block => block.remove());
+    
+    // Restart
+    startGame();
+}
+
+</script>
+
+</body>
+</html>
